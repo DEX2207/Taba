@@ -1,0 +1,6 @@
+@Taba.backend_HostAddress = http://localhost:5266
+
+GET {{Taba.backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

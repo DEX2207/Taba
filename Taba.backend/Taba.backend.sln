@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taba.API", "Taba.API\Taba.API.csproj", "{1EA47C93-6A3C-43E4-8661-333139575E3F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taba.Parser", "Taba.Parser\Taba.Parser.csproj", "{BE61FD8E-1382-477F-9601-C092D51E008A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taba.Domain", "Taba.Domain\Taba.Domain.csproj", "{F1F530AB-97D5-4789-9EF7-054DFE4C6578}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taba.Infrastucture", "Taba.Infrastucture\Taba.Infrastucture.csproj", "{F91E64DB-7D5F-4DDD-86F0-B9DB73654283}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taba.Application", "Taba.Application\Taba.Application.csproj", "{EDC38B5D-81FF-467E-9E10-43BCEF504EFA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1EA47C93-6A3C-43E4-8661-333139575E3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EA47C93-6A3C-43E4-8661-333139575E3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EA47C93-6A3C-43E4-8661-333139575E3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EA47C93-6A3C-43E4-8661-333139575E3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE61FD8E-1382-477F-9601-C092D51E008A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE61FD8E-1382-477F-9601-C092D51E008A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE61FD8E-1382-477F-9601-C092D51E008A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE61FD8E-1382-477F-9601-C092D51E008A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1F530AB-97D5-4789-9EF7-054DFE4C6578}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1F530AB-97D5-4789-9EF7-054DFE4C6578}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1F530AB-97D5-4789-9EF7-054DFE4C6578}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1F530AB-97D5-4789-9EF7-054DFE4C6578}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F91E64DB-7D5F-4DDD-86F0-B9DB73654283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F91E64DB-7D5F-4DDD-86F0-B9DB73654283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F91E64DB-7D5F-4DDD-86F0-B9DB73654283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F91E64DB-7D5F-4DDD-86F0-B9DB73654283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDC38B5D-81FF-467E-9E10-43BCEF504EFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDC38B5D-81FF-467E-9E10-43BCEF504EFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDC38B5D-81FF-467E-9E10-43BCEF504EFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDC38B5D-81FF-467E-9E10-43BCEF504EFA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
