@@ -65,9 +65,11 @@ public class Worker : BackgroundService
             _logger.LogError("Не удалось получить дерево категорий");
             return;
         }
+        _logger.LogInformation("Root категория: Id={Id}, дочерних={Count}", 
+            categoryTree.Id, categoryTree.Categories.Count);
 
         var leafCategories = _parser.GetLeafCategories(categoryTree)
-            .Where(c => c.Type == "CATEGORY") // только реальные категории
+            //.Where(c => c.Type == "CATEGORY") // только реальные категории
             .Take(20) // для теста берём 20
             .ToList();
         _logger.LogInformation("Найдено {Count} конечных категорий", leafCategories.Count);
@@ -131,6 +133,7 @@ public class Worker : BackgroundService
         Ad ad,
         CancellationToken stoppingToken)
     {
+        var sellerId = await ResolveSellerAsync(db, source, ad.Owner, stoppingToken);
         // Проверяем существует ли объявление
         var existing = await db.Listings.FirstOrDefaultAsync(
             l => l.SourceId == source.Id && l.ExternalId == ad.Id,
@@ -172,6 +175,26 @@ public class Worker : BackgroundService
                     });
                 }
             }
+            //Обновляем продовца
+            if (sellerId.HasValue)
+                existing.SellerId = sellerId;
+            
+            // Добавляем изображения только если их ещё нет
+            var hasImages = await db.ListingImages.AnyAsync(
+                i => i.ListingId == existing.Id, stoppingToken);
+
+            if (!hasImages)
+            {
+                for (int i = 0; i < imageUrls.Count; i++)
+                {
+                    db.ListingImages.Add(new ListingImage
+                    {
+                        ListingId = existing.Id,
+                        Url = imageUrls[i],
+                        OrderIndex = i
+                    });
+                }
+            }
 
             existing.Price = price;
             existing.Currency = currency;
@@ -191,13 +214,13 @@ public class Worker : BackgroundService
                 Price = price,
                 Currency = currency,
                 Url = url,
+                SellerId = sellerId,
                 Status = ListingStatus.Active,
                 CountryId = 1,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 ParsedAt = DateTime.UtcNow
             };
-
             db.Listings.Add(listing);
             await db.SaveChangesAsync(stoppingToken);
             // Привязываем категорию
@@ -288,5 +311,32 @@ public class Worker : BackgroundService
         await db.SaveChangesAsync(stoppingToken);
 
         return category.Id;
+    }
+    private async Task<int?> ResolveSellerAsync(
+        AppDbContext db,
+        Source source,
+        AdOwner? owner,
+        CancellationToken stoppingToken)
+    {
+        if (owner == null) return null;
+
+        var seller = await db.Sellers.FirstOrDefaultAsync(
+            s => s.SourceId == source.Id && s.ExternalSellerId == owner.Id,
+            stoppingToken);
+
+        if (seller != null)
+            return seller.Id;
+
+        seller = new Seller
+        {
+            SourceId = source.Id,
+            ExternalSellerId = owner.Id,
+            Name = owner.Login ?? "Неизвестно"
+        };
+
+        db.Sellers.Add(seller);
+        await db.SaveChangesAsync(stoppingToken);
+
+        return seller.Id;
     }
 }
