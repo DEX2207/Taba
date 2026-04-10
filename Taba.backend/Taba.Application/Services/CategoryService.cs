@@ -19,10 +19,15 @@ public class CategoryService : ICategoryService
         var categories = await _db.Categories.ToListAsync();
 
         var lookup = categories
+            .Where(c => c.ParentId != null)
             .GroupBy(c => c.ParentId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+            .ToDictionary(g => g.Key!.Value, g => g.ToList());
 
-        List<CategoryTreeDto> BuildTree(int? parentId)
+        var rootCategories = categories
+            .Where(c => c.ParentId == null)
+            .ToList();
+
+        List<CategoryTreeDto> BuildTree(int parentId)
         {
             if (!lookup.ContainsKey(parentId))
                 return new List<CategoryTreeDto>();
@@ -37,6 +42,41 @@ public class CategoryService : ICategoryService
                 .ToList();
         }
 
-        return BuildTree(null);
+        return rootCategories
+            .Select(c => new CategoryTreeDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Children = BuildTree(c.Id)
+            })
+            .ToList();
+    }
+    public async Task<List<int>> GetAllChildCategoryIdsAsync(int categoryId)
+    {
+        var categories = await _db.Categories.ToListAsync();
+        
+        var lookup = categories
+            .Where(c => c.ParentId != null)
+            .GroupBy(c => c.ParentId!.Value)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Id).ToList());
+
+        var result = new List<int>();
+
+        void Collect(int parentId)
+        {
+            result.Add(parentId);
+
+            if (!lookup.ContainsKey(parentId))
+                return;
+
+            foreach (var childId in lookup[parentId])
+            {
+                Collect(childId);
+            }
+        }
+
+        Collect(categoryId);
+
+        return result;
     }
 }

@@ -9,17 +9,33 @@ namespace Taba.Application.Services;
 public class ListingService : IListingService
 {
     private readonly AppDbContext _db;
+    
+    private readonly ICategoryService _categoryService;
 
-    public ListingService(AppDbContext db)
+    public ListingService(AppDbContext db, ICategoryService categoryService)
     {
         _db = db;
+        _categoryService = categoryService;
     }
 
     public async Task<List<ListingDto>> GetListingsAsync(ListingFilterDto filter)
     {
         var query = _db.Listings
+            .AsNoTracking()
             .Where(l => l.Status == ListingStatus.Active)
             .AsQueryable();
+        
+        
+        if (filter.CategoryId.HasValue)
+        {
+            var categoryIds = await _categoryService
+                .GetAllChildCategoryIdsAsync(filter.CategoryId.Value);
+
+            query = query.Where(l =>
+                _db.ListingCategories
+                    .Any(lc => lc.ListingId == l.Id && categoryIds.Contains(lc.CategoryId))
+            );
+        }
 
         if (filter.MinPrice.HasValue)
             query = query.Where(l => l.Price >= filter.MinPrice);
