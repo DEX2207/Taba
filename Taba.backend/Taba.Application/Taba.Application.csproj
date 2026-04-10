@@ -8,6 +8,11 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Taba.Domain\Taba.Domain.csproj" />
+      <ProjectReference Include="..\Taba.Infrastucture\Taba.Infrastucture.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Mappings\" />
     </ItemGroup>
 
 </Project>

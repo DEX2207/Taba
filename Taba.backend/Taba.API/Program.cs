@@ -1,21 +1,39 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
+using Taba.Application.Interfaces;
+using Taba.Application.Services;
 using Taba.Infrastucture.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IListingService, ListingService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Taba API",
+        Version = "v1",
+        Description = "Агрегатор объявлений (999.md и др.)"
+    });
+});
+builder.Services.AddControllers();
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+app.MapControllers(); // ОБЯЗАТЕЛЬНО
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
