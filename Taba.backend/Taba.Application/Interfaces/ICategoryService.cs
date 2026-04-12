@@ -6,4 +6,5 @@ public interface ICategoryService
 {
     Task<List<CategoryTreeDto>> GetCategoryTreeAsync();
     Task<List<int>> GetAllChildCategoryIdsAsync(int categoryId);
+    Task<List<CategoryFilterDto>> GetCategoryFiltersAsync(int categoryId);
 }

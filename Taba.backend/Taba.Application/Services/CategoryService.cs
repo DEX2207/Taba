@@ -79,4 +79,29 @@ public class CategoryService : ICategoryService
 
         return result;
     }
+    public async Task<List<CategoryFilterDto>> GetCategoryFiltersAsync(int categoryId)
+    {
+        var allIds = new List<int> { categoryId };
+
+        var category = await _db.Categories.FindAsync(categoryId);
+        if (category?.ParentId != null)
+            allIds.Add(category.ParentId.Value);
+
+        var filters = await _db.CategoryFilters
+            .Where(f => f.CategoryId == categoryId ||
+                        (allIds.Contains(f.CategoryId) && f.IsInherited))
+            .OrderBy(f => f.SortOrder)
+            .ToListAsync();
+
+        return filters.Select(f => new CategoryFilterDto
+        {
+            Key = f.Key,
+            Label = f.Label,
+            FilterType = f.FilterType,
+            SortOrder = f.SortOrder,
+            Options = f.Options != null
+                ? System.Text.Json.JsonSerializer.Deserialize<List<string>>(f.Options)
+                : null
+        }).ToList();
+    }
 }

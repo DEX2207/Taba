@@ -23,6 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<ListingPromotion> ListingPromotions => Set<ListingPromotion>();
     public DbSet<ListingAttribute> ListingAttributes => Set<ListingAttribute>();
+    public DbSet<CategoryFilter> CategoryFilters => Set<CategoryFilter>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

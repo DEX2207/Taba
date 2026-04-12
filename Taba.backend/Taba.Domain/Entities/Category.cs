@@ -9,4 +9,5 @@ public class Category
     public Category? Parent { get; set; }
     public ICollection<Category> Children { get; set; } = new List<Category>();
     public ICollection<SourceCategoryMapping> SourceMappings { get; set; } = new List<SourceCategoryMapping>();
+    public ICollection<CategoryFilter> Filters { get; set; } = new List<CategoryFilter>();
 }

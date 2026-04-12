@@ -42,6 +42,15 @@ public class ListingService : IListingService
 
         if (filter.MaxPrice.HasValue)
             query = query.Where(l => l.Price <= filter.MaxPrice);
+        
+        //Фильтрация по аттрибутам
+        foreach (var (key, value) in filter.Attrs)
+        {
+            var k = key;
+            var v = value;
+            query = query.Where(l =>
+                l.Attributes.Any(a => a.Key == k && a.Value == v));
+        }
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
             query = query.Where(l => l.Title.Contains(filter.Search));
