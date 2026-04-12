@@ -70,13 +70,16 @@ public class Worker : BackgroundService
 
         var leafCategories = _parser.GetLeafCategories(categoryTree)
             //.Where(c => c.Type == "CATEGORY") // только реальные категории
-            .Take(20) // для теста берём 20
+            //.Take(20) // для теста берём 20
             .ToList();
         _logger.LogInformation("Найдено {Count} конечных категорий", leafCategories.Count);
 
         foreach (var category in leafCategories)
         {
             if (stoppingToken.IsCancellationRequested) break;
+            /*using var categoryScope = _scopeFactory.CreateScope();
+            db = categoryScope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.ChangeTracker.AutoDetectChangesEnabled = false;*/
 
             _logger.LogInformation("Парсим категорию {Id} — {Name}",
                 category.Id, category.Title?.Translated);
@@ -90,15 +93,24 @@ public class Worker : BackgroundService
             _logger.LogInformation("Маппинг для категории {ExternalId}: {Result}", 
                 category.Id, mapping?.CategoryId.ToString() ?? "НЕ НАЙДЕН");
             
+            var internalCategoryId = mapping?.CategoryId ?? 0;
+            
+            
+            
             if (mapping != null)
-            {
                 await SyncCategoryFiltersAsync(db, mapping.CategoryId, category.Id, stoppingToken);
-                await ParseCategoryAsync(db, source, category.Id, mapping.CategoryId, stoppingToken);
-            }
-            else
+
+            await ParseCategoryAsync(db, source, category.Id, mapping?.CategoryId ?? 0, stoppingToken);
+            
+            // После парсинга — снова проверяем маппинг (он мог появиться)
+            if (mapping == null)
             {
-                await ParseCategoryAsync(db, source, category.Id, 0, stoppingToken);
+                mapping = await db.SourceCategoryMappings.FirstOrDefaultAsync(
+                    m => m.SourceId == source.Id && m.ExternalCategoryName == category.Id.ToString(), stoppingToken);
+                if (mapping != null)
+                    await SyncCategoryFiltersAsync(db, mapping.CategoryId, category.Id, stoppingToken);
             }
+            //GC.Collect();
         }
     }
 
@@ -119,7 +131,9 @@ public class Worker : BackgroundService
         const int maxPages = 3;
         int pageCount = 0;
         int totalParsed = 0;
-
+        bool featureMapBuilt = internalCategoryId != 0;
+        //var seenExternalIds = new HashSet<string>();
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             if (pageCount >= maxPages) break;
@@ -128,12 +142,42 @@ public class Worker : BackgroundService
             if (ads.Count == 0) break;
 
             foreach (var ad in ads)
+            {
+                //seenExternalIds.Add(ad.Id);
                 await ProcessAdAsync(db, source, ad, featureKeyMap, stoppingToken);
+                //db.ChangeTracker.Clear(); 
+    
+                // После первого объявления маппинг уже создан — пересобираем featureKeyMap
+                if (!featureMapBuilt)
+                {
+                    var mapping = await db.SourceCategoryMappings.FirstOrDefaultAsync(
+                        m => m.SourceId == source.Id && 
+                             m.ExternalCategoryName == subCategoryId.ToString(), stoppingToken);
+                    if (mapping != null)
+                    {
+                        await SyncCategoryFiltersAsync(db, mapping.CategoryId, subCategoryId, stoppingToken);
+                        featureKeyMap = await BuildFeatureKeyMapAsync(db, mapping.CategoryId, stoppingToken);
+                        featureMapBuilt = true;
+                        _logger.LogInformation("featureKeyMap пересобран: {Count} ключей", featureKeyMap.Count);
+                    }
+                }
+            }
             
             var pendingAttrs = db.ChangeTracker.Entries<ListingAttribute>()
                 .Where(e => e.State == EntityState.Added)
                 .Count();
             _logger.LogInformation("Pending ListingAttributes перед сохранением: {Count}", pendingAttrs);
+            
+            /*var activeListings = await db.Listings
+                .Where(l => l.SourceId == source.Id && 
+                            l.Status == ListingStatus.Active)
+                .ToListAsync(stoppingToken);
+
+            foreach (var listing in activeListings)
+            {
+                if (!seenExternalIds.Contains(listing.ExternalId))
+                    listing.Status = ListingStatus.Deleted;
+            }*/
 
             await db.SaveChangesAsync(stoppingToken);
             totalParsed += ads.Count;
@@ -220,6 +264,13 @@ public class Worker : BackgroundService
             existing.UpdatedAt = DateTime.UtcNow;
             existing.ParsedAt = DateTime.UtcNow;
             existing.Status = ListingStatus.Active;
+            
+            /*if (string.IsNullOrEmpty(existing.Description))
+            {
+                var details = await _parser.FetchAdDetailsAsync(ad.Id);
+                await SaveListingAttributesAsync(db, existing.Id, existing, details, featureKeyMap);
+                await Task.Delay(200, stoppingToken);
+            }*/
         }
         else
         {
@@ -387,17 +438,49 @@ public class Worker : BackgroundService
             {
                 try
                 {
+                    _logger.LogInformation("Feature 13 raw value: {Json}", feature.ToString());
                     var bodyVal = feature.GetProperty("value");
                     if (bodyVal.TryGetProperty("ru", out var ru))
                         listing.Description = ru.GetString();
                     else if (bodyVal.TryGetProperty("translated", out var tr))
                         listing.Description = tr.GetString();
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Ошибка парсинга Description для listing {Id}", listingId);
+                }
                 continue;
             }
 
-            if (featureId == 7) continue;
+            if (featureId == 7)
+            {
+                try
+                {
+                    var bodyVal = feature.GetProperty("value");
+                    if (bodyVal.TryGetProperty("translated", out var regionName))
+                    {
+                        var name = regionName.GetString();
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            // Ищем или создаём регион
+                            var region = await db.Regions.FirstOrDefaultAsync(r => r.Name == name);
+                            if (region == null)
+                            {
+                                region = new Region { Name = name, CountryId = listing.CountryId };
+                                db.Regions.Add(region);
+                                await db.SaveChangesAsync();
+                            }
+                            listing.RegionId = region.Id;
+                            listing.RawRegionName = name;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Ошибка парсинга региона для listing {Id}", listingId);
+                }
+                continue;
+            }
 
             if (!featureKeyMap.TryGetValue(featureId, out var key))
             {

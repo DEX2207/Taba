@@ -54,37 +54,73 @@ public class ListingService : IListingService
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
             query = query.Where(l => l.Title.Contains(filter.Search));
+        
+        var page = Math.Max(1, filter.Page);
+        var pageSize = Math.Max(1, Math.Min(100, filter.PageSize));
 
-        var listings = await query
-            .Skip((filter.Page - 1) * filter.PageSize)
-            .Take(filter.PageSize)
-            .Select(l => new ListingDto
+        var rawListings = await query
+            .OrderBy(l => l.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(l => new
             {
-                Id = l.Id,
-                Title = l.Title,
-                Price = l.Price,
-                Currency = l.Currency,
-                Url = l.Url,
-                Images = l.Images.Select(i => i.Url).ToList()
+                l.Id,
+                l.Title,
+                l.Description,
+                l.Price,
+                l.Currency,
+                l.Url,
+                l.RawRegionName,
+                Images = l.Images.Select(i => i.Url).ToList(),
+                Attributes = l.Attributes.Select(a => new { a.Key, a.Value }).ToList()
             })
             .ToListAsync();
 
-        return listings;
+        return rawListings.Select(l => new ListingDto
+        {
+            Id = l.Id,
+            Title = l.Title,
+            Description = l.Description,
+            Price = l.Price,
+            Currency = l.Currency,
+            Url = l.Url,
+            RegionName = l.RawRegionName,
+            Images = l.Images.ToList(),
+            Attributes = l.Attributes.ToDictionary(a => a.Key, a => a.Value)
+        }).ToList();
     }
 
     public async Task<ListingDto?> GetByIdAsync(int id)
     {
-        return await _db.Listings
+        var listing = await _db.Listings
             .Where(l => l.Id == id)
-            .Select(l => new ListingDto
+            .Select(l => new
             {
-                Id = l.Id,
-                Title = l.Title,
-                Price = l.Price,
-                Currency = l.Currency,
-                Url = l.Url,
-                Images = l.Images.Select(i => i.Url).ToList()
+                l.Id,
+                l.Title,
+                l.Description,
+                l.Price,
+                l.Currency,
+                l.Url,
+                l.RawRegionName,
+                Images = l.Images.Select(i => i.Url).ToList(),
+                Attributes = l.Attributes.Select(a => new { a.Key, a.Value }).ToList()
             })
             .FirstOrDefaultAsync();
+
+        if (listing == null) return null;
+
+        return new ListingDto
+        {
+            Id = listing.Id,
+            Title = listing.Title,
+            Description = listing.Description,
+            Price = listing.Price,
+            Currency = listing.Currency,
+            Url = listing.Url,
+            RegionName = listing.RawRegionName,
+            Images = listing.Images,
+            Attributes = listing.Attributes.ToDictionary(a => a.Key, a => a.Value)
+        };
     }
 }

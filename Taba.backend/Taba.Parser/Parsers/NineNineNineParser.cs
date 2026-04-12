@@ -182,7 +182,7 @@ public class NineNineNineParser
             if (advert.TryGetProperty($"f{featureId}", out var feature) &&
                 feature.ValueKind != System.Text.Json.JsonValueKind.Null)
             {
-                result[featureId] = feature;
+                result[featureId] = feature.Clone();
             }
         }
 

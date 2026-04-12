@@ -18,6 +18,15 @@ public class ListingsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetListings([FromQuery] ListingFilterDto filter)
     {
+        foreach (var key in Request.Query.Keys
+                     .Where(k => k.StartsWith("attr.", StringComparison.OrdinalIgnoreCase)))
+        {
+            var attrKey = key["attr.".Length..];
+            var attrValue = Request.Query[key].ToString();
+            if (!string.IsNullOrWhiteSpace(attrValue))
+                filter.Attrs[attrKey] = attrValue;
+        }
+
         var result = await _service.GetListingsAsync(filter);
         return Ok(result);
     }

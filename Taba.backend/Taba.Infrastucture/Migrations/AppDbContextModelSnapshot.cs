@@ -158,8 +158,7 @@ namespace Taba.Infrastucture.Migrations
                         .HasColumnType("character varying(10)");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(5000)
-                        .HasColumnType("character varying(5000)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ExternalId")
                         .IsRequired()

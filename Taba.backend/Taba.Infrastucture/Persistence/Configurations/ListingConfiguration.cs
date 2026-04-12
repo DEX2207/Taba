@@ -11,7 +11,7 @@ public class ListingConfiguration : IEntityTypeConfiguration<Listing>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.ExternalId).IsRequired().HasMaxLength(100);
         builder.Property(x => x.Title).IsRequired().HasMaxLength(500);
-        builder.Property(x => x.Description).HasMaxLength(5000);
+        builder.Property(x => x.Description).HasColumnType("text");
         builder.Property(x => x.Price).HasColumnType("decimal(18,2)");
         builder.Property(x => x.Currency).IsRequired().HasMaxLength(10);
         builder.Property(x => x.Url).IsRequired().HasMaxLength(1000);
