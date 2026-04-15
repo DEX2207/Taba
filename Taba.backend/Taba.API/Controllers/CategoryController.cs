@@ -20,4 +20,10 @@ public class CategoryController:ControllerBase
         var result = await _service.GetCategoryTreeAsync();
         return Ok(result);
     }
+    [HttpGet("{id}/filters")]
+    public async Task<IActionResult> GetFilters(int id)
+    {
+        var filters = await _service.GetCategoryFiltersAsync(id);
+        return Ok(filters);
+    }
 }
