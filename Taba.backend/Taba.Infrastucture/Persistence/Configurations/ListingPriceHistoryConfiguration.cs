@@ -10,7 +10,7 @@ public class ListingPriceHistoryConfiguration : IEntityTypeConfiguration<Listing
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Price).HasColumnType("decimal(18,2)");
-        builder.Property(x => x.Currency).IsRequired().HasMaxLength(10);
+        builder.Property(x => x.Currency).IsRequired().HasMaxLength(50);
 
         builder.HasIndex(x => x.RecordedAt);
     }
