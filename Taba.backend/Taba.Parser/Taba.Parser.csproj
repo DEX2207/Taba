@@ -8,9 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.4"/>
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.4" />
+        <PackageReference Include="Microsoft.Playwright" Version="1.59.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
         <PackageReference Include="System.Text.Json" Version="10.0.4" />
     </ItemGroup>

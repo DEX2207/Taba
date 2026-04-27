@@ -8,4 +8,5 @@ public class Source
 
     public ICollection<SourceCountry> SourceCountries { get; set; } = new List<SourceCountry>();
     public ICollection<SourceCategoryMapping> CategoryMappings { get; set; } = new List<SourceCategoryMapping>();
+    public ICollection<SourceAttributeMapping> AttributeMappings { get; set; } = new List<SourceAttributeMapping>();
 }

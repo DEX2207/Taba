@@ -446,6 +446,45 @@ namespace Taba.Infrastucture.Migrations
                     b.ToTable("Sources");
                 });
 
+            modelBuilder.Entity("Taba.Domain.Entities.SourceAttributeMapping", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<float?>("Confidence")
+                        .HasColumnType("real");
+
+                    b.Property<bool>("IsManual")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NormalizedKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RawKey")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("SourceId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("SourceId", "RawKey", "CategoryId")
+                        .IsUnique();
+
+                    b.ToTable("SourceAttributeMappings");
+                });
+
             modelBuilder.Entity("Taba.Domain.Entities.SourceCategoryMapping", b =>
                 {
                     b.Property<int>("Id")
@@ -717,6 +756,24 @@ namespace Taba.Infrastucture.Migrations
                     b.Navigation("Source");
                 });
 
+            modelBuilder.Entity("Taba.Domain.Entities.SourceAttributeMapping", b =>
+                {
+                    b.HasOne("Taba.Domain.Entities.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Taba.Domain.Entities.Source", "Source")
+                        .WithMany("AttributeMappings")
+                        .HasForeignKey("SourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Source");
+                });
+
             modelBuilder.Entity("Taba.Domain.Entities.SourceCategoryMapping", b =>
                 {
                     b.HasOne("Taba.Domain.Entities.Category", "Category")
@@ -802,6 +859,8 @@ namespace Taba.Infrastucture.Migrations
 
             modelBuilder.Entity("Taba.Domain.Entities.Source", b =>
                 {
+                    b.Navigation("AttributeMappings");
+
                     b.Navigation("CategoryMappings");
 
                     b.Navigation("SourceCountries");

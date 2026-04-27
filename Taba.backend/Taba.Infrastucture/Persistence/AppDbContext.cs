@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<ListingPromotion> ListingPromotions => Set<ListingPromotion>();
     public DbSet<ListingAttribute> ListingAttributes => Set<ListingAttribute>();
     public DbSet<CategoryFilter> CategoryFilters => Set<CategoryFilter>();
+    public DbSet<SourceAttributeMapping> SourceAttributeMappings => Set<SourceAttributeMapping>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
